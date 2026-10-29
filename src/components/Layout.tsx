@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Dialog, ConfirmDialog } from './Dialog'
 import { Icon, Suit, SuitDivider } from './Icons'
+import { Link } from './Link'
 import { useGame } from '../game/GameProvider'
 import { navigate } from '../lib/router'
 
@@ -9,7 +10,7 @@ export function Header({ history = false }: { history?: boolean }) {
   return (
     <>
       <header className="site-header">
-        <a href="#/beranda" className="brand" aria-label="Ceki, ke beranda">
+        <Link to="beranda" className="brand" aria-label="Ceki, ke beranda">
           <span className="brand-symbol">
             <Suit size={21} />
           </span>
@@ -17,15 +18,15 @@ export function Header({ history = false }: { history?: boolean }) {
             ceki<span>.</span>
           </span>
           <span className="brand-tagline">teman semeja.</span>
-        </a>
+        </Link>
         <nav className="main-nav" aria-label="Navigasi utama">
-          <a href="#/beranda" className={`nav-link ${!history ? 'nav-active' : ''}`}>
+          <Link to="beranda" className={`nav-link ${!history ? 'nav-active' : ''}`}>
             Meja main
-          </a>
-          <a href="#/riwayat" className={`nav-link ${history ? 'nav-active' : ''}`}>
+          </Link>
+          <Link to="riwayat" className={`nav-link ${history ? 'nav-active' : ''}`}>
             <Icon name="history" size={17} />
             <span>Riwayat</span>
-          </a>
+          </Link>
           <button
             className="icon-button help-button"
             onClick={() => setHelp(true)}
@@ -57,8 +58,8 @@ export function Header({ history = false }: { history?: boolean }) {
               <div>
                 <h3>Ketuk untuk mencatat</h3>
                 <p>
-                  Hitung skor bersih tiap pemain. Tombol + menambah, tombol − mengurangi. Salah
-                  ketuk? Tinggal urungkan.
+                  Hitung skor bersih tiap pemain. Gunakan tombol +/− atau pilih Input manual untuk
+                  mengganti skor ronde secara langsung. Salah catat? Tinggal urungkan.
                 </p>
               </div>
             </li>
@@ -120,10 +121,10 @@ export function PageHeading({
 }) {
   return (
     <div className="page-heading">
-      <a href={`#/${back}`} className="back-link">
+      <Link to={back} className="back-link">
         <Icon name="arrow-left" size={17} />
         {backLabel}
-      </a>
+      </Link>
       <div className="eyebrow">
         <Suit name="diamond" size={11} />
         {eyebrow}
@@ -157,10 +158,10 @@ export function EmptyState({
       </div>
       <h2>{title}</h2>
       <p>{description}</p>
-      <a href={`#/${action}`} className="button button-primary">
+      <Link to={action} className="button button-primary">
         {actionLabel}
         <Icon name="arrow-right" />
-      </a>
+      </Link>
     </div>
   )
 }

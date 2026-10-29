@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CrownArt, Icon, Suit, SuitDivider } from '../components/Icons'
+import { Link } from '../components/Link'
 import { leaderboard, winners } from '../game/engine'
 import type { Game } from '../game/types'
 import { dateLabel, points, suitFor } from '../lib/format'
@@ -40,10 +41,10 @@ export function ResultsPage({ game }: { game: Game }) {
     <>
       {celebrating && <Confetti />}
       <div className="results-topline">
-        <a href="#/beranda" className="back-link">
+        <Link to="beranda" className="back-link">
           <Icon name="arrow-left" size={17} />
           Ke beranda
-        </a>
+        </Link>
         <span>{dateLabel(game.createdAt)}</span>
       </div>
       <section className="winner-stage">
@@ -146,14 +147,14 @@ export function ResultsPage({ game }: { game: Game }) {
           <em>Teman semejanya tetap.</em>
         </p>
         <div>
-          <a href={`#/atur/${game.id}`} className="button button-primary button-large">
+          <Link to={`atur/${game.id}`} className="button button-primary button-large">
             Main lagi
             <Icon name="reset" size={19} />
-          </a>
-          <a href={`#/ronde/${game.id}`} className="button button-secondary">
+          </Link>
+          <Link to={`ronde/${game.id}`} className="button button-secondary">
             Lihat rincian
             <Icon name="history" size={18} />
-          </a>
+          </Link>
         </div>
       </div>
     </>

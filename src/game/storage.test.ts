@@ -30,6 +30,13 @@ describe('local persistence', () => {
     const state = fixture()
     expect(parseState(JSON.stringify(state))).toEqual(state)
   })
+  it('round-trips manually entered integers that are not multiples of five', () => {
+    const state = fixture()
+    state.games[0]!.rounds[0]!.scores.p1 = 37
+    state.games[0]!.rounds[0]!.scores.p2 = -47
+    state.drafts[draftKey('game-1')]!.histories.p1 = [0, 17, -23]
+    expect(parseState(JSON.stringify(state))).toEqual(state)
+  })
   it('loads a new browser without an error', () => {
     expect(loadState({ getItem: () => null, setItem: () => {} })).toEqual({
       state: emptyState(),
@@ -122,7 +129,7 @@ describe('local persistence', () => {
     other.drafts[draftKey('game-1')]!.activePlayer = 5
     expect(parseState(JSON.stringify(other))).toBeNull()
   })
-  it('rejects non-integer or unsupported stored scores', () => {
+  it('rejects non-integer stored scores', () => {
     const state = fixture()
     state.games[0]!.rounds[0]!.scores.p1 = 12.5
     expect(parseState(JSON.stringify(state))).toBeNull()

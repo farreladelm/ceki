@@ -1,5 +1,6 @@
 import { draftKey, emptyState, MAX_PLAYERS, standings } from './engine'
 import type { AppState, Draft, Game, Round } from './types'
+import { isValidScore } from './score'
 
 export const STORAGE_KEY = 'ceki.meja.v1'
 
@@ -16,8 +17,6 @@ const validId = (value: unknown): value is string =>
   typeof value === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(value)
 const validDate = (value: unknown): value is string =>
   typeof value === 'string' && Number.isFinite(Date.parse(value))
-const validScore = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isSafeInteger(value) && value % 5 === 0
 
 function validRound(value: unknown, playerIds: string[]): value is Round {
   if (
@@ -31,7 +30,7 @@ function validRound(value: unknown, playerIds: string[]): value is Round {
   const scores = value.scores
   return (
     Object.keys(scores).length === playerIds.length &&
-    playerIds.every((id) => Object.hasOwn(scores, id) && validScore(scores[id]))
+    playerIds.every((id) => Object.hasOwn(scores, id) && isValidScore(scores[id]))
   )
 }
 
@@ -95,7 +94,7 @@ function validDraft(value: unknown, game: Game): value is Draft {
   const histories = value.histories
   return game.players.every((player) => {
     const history = histories[player.id]
-    return Array.isArray(history) && history.length > 0 && history.every(validScore)
+    return Array.isArray(history) && history.length > 0 && history.every(isValidScore)
   })
 }
 

@@ -2,6 +2,7 @@ import { isFinished, leaderboard, winners } from '../game/engine'
 import type { Game } from '../game/types'
 import { dateLabel, points } from '../lib/format'
 import { Icon, Suit } from './Icons'
+import { Link } from './Link'
 
 export function SessionCard({ game, onDelete }: { game: Game; onDelete?: () => void }) {
   const finished = isFinished(game)
@@ -25,7 +26,7 @@ export function SessionCard({ game, onDelete }: { game: Game; onDelete?: () => v
           </button>
         )}
       </div>
-      <a href={`#/${finished ? 'hasil' : 'meja'}/${game.id}`} className="session-main-link">
+      <Link to={`${finished ? 'hasil' : 'meja'}/${game.id}`} className="session-main-link">
         <div className="session-emblem">
           <Suit name={finished ? 'spade' : 'club'} size={30} />
         </div>
@@ -42,7 +43,7 @@ export function SessionCard({ game, onDelete }: { game: Game; onDelete?: () => v
           </p>
         </div>
         <Icon name="arrow-up-right" size={22} />
-      </a>
+      </Link>
       <div className="session-bottom">
         <span>
           Target <strong>{points(game.target)}</strong>

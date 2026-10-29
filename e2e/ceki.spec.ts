@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import { resizeViewport } from './helpers'
 
 async function setup(page: Page) {
-  await page.goto('/#/atur')
+  await page.goto('/atur')
   await page.getByRole('button', { name: '2 orang', exact: true }).click()
   await page.getByRole('textbox', { name: 'Pemain 1', exact: true }).fill('Ani')
   await page.getByRole('textbox', { name: 'Pemain 2', exact: true }).fill('Budi')
@@ -23,14 +24,14 @@ test('welcome and setup fit narrow and wide screens', async ({ page }, info) => 
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({ path: info.outputPath('home.png'), fullPage: true })
   for (const width of [320, 360, 390, 768, 1365]) {
-    await page.setViewportSize({ width, height: 844 })
+    await resizeViewport(page, width)
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
       ),
     ).toBe(true)
   }
-  await page.setViewportSize(originalViewport)
+  await resizeViewport(page, originalViewport.width, originalViewport.height)
   await page.getByRole('link', { name: 'Mulai main', exact: true }).click()
   await expect(page.getByRole('button', { name: '4 orang favorit', exact: true })).toHaveAttribute(
     'aria-pressed',
@@ -113,7 +114,7 @@ test('shared crown, correction confirmation, reopened game and a new single winn
 })
 
 test('manual player count and custom target', async ({ page }) => {
-  await page.goto('/#/atur')
+  await page.goto('/atur')
   await page.getByRole('button', { name: 'Lainnya', exact: true }).click()
   await page.getByLabel('Jumlah pemain', { exact: false }).fill('1')
   await expect(page.getByRole('button', { name: 'Buka meja main', exact: true })).toBeDisabled()
@@ -132,7 +133,7 @@ test('manual player count and custom target', async ({ page }) => {
 test('four-player round awards the highest score and deleting it reopens the table', async ({
   page,
 }, info) => {
-  await page.goto('/#/atur')
+  await page.goto('/atur')
   await page.getByRole('button', { name: 'Buka meja main', exact: true }).click()
   await expect(page.locator('.player-score-card')).toHaveCount(4)
   await expect(page.locator('.player-score-card h3')).toHaveText([
@@ -176,7 +177,7 @@ test('four-player round awards the highest score and deleting it reopens the tab
 })
 
 test('duplicate names can be corrected without losing setup', async ({ page }) => {
-  await page.goto('/#/atur')
+  await page.goto('/atur')
   await page.getByRole('button', { name: '2 orang', exact: true }).click()
   await page.getByRole('textbox', { name: 'Pemain 1', exact: true }).fill('Ani')
   await page.getByRole('textbox', { name: 'Pemain 2', exact: true }).fill(' ani ')

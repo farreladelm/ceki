@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ConfirmDialog } from '../components/Dialog'
 import { Icon, Suit } from '../components/Icons'
 import { PageHeading } from '../components/Layout'
+import { ManualScoreDialog } from '../components/ManualScoreDialog'
 import { useGame } from '../game/GameProvider'
 import {
   draftKey,
@@ -14,6 +15,7 @@ import {
   standings,
 } from '../game/engine'
 import type { Game, GameAction } from '../game/types'
+import { sumScores } from '../game/score'
 import { points, signedPoints, suitFor } from '../lib/format'
 import { navigate } from '../lib/router'
 
@@ -23,6 +25,7 @@ export function ScorePage({ game, roundId }: { game: Game; roundId?: string }) {
   const draft = state.drafts[key]
   const [confirmSave, setConfirmSave] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
   const [error, setError] = useState('')
   const saving = useRef(false)
   const initialized = useRef(!!draft)
@@ -50,7 +53,10 @@ export function ScorePage({ game, roundId }: { game: Game; roundId?: string }) {
   const value = draftScore(draft, active.id)
   const rows = standings(game)
   const oldScore = game.rounds.find((round) => round.id === roundId)?.scores[active.id] ?? 0
-  const previous = (rows.find((row) => row.player.id === active.id)?.total ?? 0) - oldScore
+  const previous = sumScores([
+    rows.find((row) => row.player.id === active.id)?.total ?? 0,
+    -oldScore,
+  ])
   const projected = projectedTotal(game, draft, active.id)
   const allSafe = game.players.every((player) =>
     Number.isSafeInteger(projectedTotal(game, draft, player.id)),
@@ -80,7 +86,7 @@ export function ScorePage({ game, roundId }: { game: Game; roundId?: string }) {
         description={
           draft.reviewing
             ? 'Periksa sekali lagi. Biar nggak ada yang protes di meja.'
-            : 'Tambah atau kurangi. Skor boleh minus, serunya jangan.'
+            : 'Ketuk tombol atau isi skor manual. Skor boleh minus, serunya jangan.'
         }
         back={editing ? `ronde/${game.id}` : `meja/${game.id}`}
         backLabel={editing ? 'Ke riwayat ronde' : 'Ke meja'}
@@ -233,7 +239,14 @@ export function ScorePage({ game, roundId }: { game: Game; roundId?: string }) {
             <div className="score-pad">
               <div className="score-pad-heading">
                 <span>Ketuk angkanya. Boleh berkali-kali.</span>
-                <span>+/−</span>
+                <button
+                  type="button"
+                  className="manual-score-trigger"
+                  onClick={() => setManualOpen(true)}
+                >
+                  <Icon name="edit" size={15} />
+                  Input manual
+                </button>
               </div>
               <div className="score-buttons positive-buttons">
                 {SCORE_STEPS.map((step) => (
@@ -358,6 +371,15 @@ export function ScorePage({ game, roundId }: { game: Game; roundId?: string }) {
             </div>
           </aside>
         </section>
+      )}
+      {manualOpen && (
+        <ManualScoreDialog
+          playerName={active.name}
+          value={value}
+          projectTotal={(score) => projectedTotal(game, draft, active.id, score)}
+          onApply={(score) => dispatch({ type: 'set-score', key, playerId: active.id, score })}
+          onClose={() => setManualOpen(false)}
+        />
       )}
       {confirmSave && (
         <ConfirmDialog

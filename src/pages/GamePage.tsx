@@ -1,7 +1,9 @@
 import { PageHeading } from '../components/Layout'
 import { Icon, Suit } from '../components/Icons'
+import { Link } from '../components/Link'
 import { useGame } from '../game/GameProvider'
 import { draftKey, standings } from '../game/engine'
+import { sumScores } from '../game/score'
 import type { Game } from '../game/types'
 import { points, signedPoints, suitFor } from '../lib/format'
 
@@ -44,6 +46,7 @@ export function GamePage({ game }: { game: Game }) {
         <div className="player-card-grid">
           {rows.map((row, index) => {
             const lastScore = game.rounds.at(-1)?.scores[row.player.id]
+            const remaining = sumScores([game.target, -row.total])
             return (
               <article
                 className={`player-score-card ${row.rank === 1 && game.rounds.length > 0 ? 'player-leading' : ''}`}
@@ -74,7 +77,7 @@ export function GamePage({ game }: { game: Game }) {
                   />
                 </div>
                 <div className="player-card-bottom">
-                  <span>{points(Math.max(0, game.target - row.total))} menuju target</span>
+                  <span>{points(remaining > 0n ? remaining : 0n)} menuju target</span>
                   {lastScore !== undefined && (
                     <span className={`last-score ${lastScore < 0 ? 'last-negative' : ''}`}>
                       {signedPoints(lastScore)}
@@ -92,14 +95,14 @@ export function GamePage({ game }: { game: Game }) {
           Poin bisa turun. Semangat jangan.
         </p>
         <div className="game-actions">
-          <a href={`#/ronde/${game.id}`} className="button button-secondary">
+          <Link to={`ronde/${game.id}`} className="button button-secondary">
             <Icon name="history" size={18} />
             Riwayat ronde
-          </a>
-          <a href={`#/catat/${game.id}`} className="button button-primary">
+          </Link>
+          <Link to={`catat/${game.id}`} className="button button-primary">
             {draft ? 'Lanjutkan catatan' : 'Catat ronde'}
             <Icon name="plus" size={19} />
-          </a>
+          </Link>
         </div>
       </div>
       {game.rounds.length === 0 && (

@@ -1,6 +1,7 @@
 import { CardFan } from '../components/CardFan'
 import { Icon, Suit, SuitDivider } from '../components/Icons'
 import { SessionCard } from '../components/SessionCard'
+import { Link } from '../components/Link'
 import { useGame } from '../game/GameProvider'
 import { isFinished } from '../game/engine'
 
@@ -11,7 +12,7 @@ export function HomePage() {
   return (
     <>
       {active && (
-        <a href={`#/meja/${active.id}`} className="resume-banner">
+        <Link to={`meja/${active.id}`} className="resume-banner">
           <span className="resume-icon">
             <Icon name="history" size={20} />
           </span>
@@ -23,7 +24,7 @@ export function HomePage() {
             Lanjut main
             <Icon name="arrow-right" size={18} />
           </span>
-        </a>
+        </Link>
       )}
       <section className="home-hero">
         <div className="hero-copy">
@@ -43,16 +44,16 @@ export function HomePage() {
             Skor Ceki tetap tercatat.
           </p>
           <div className="hero-actions">
-            <a href="#/atur" className="button button-primary hero-cta">
+            <Link to="atur" className="button button-primary hero-cta">
               Mulai main
               <span className="button-arrow">
                 <Icon name="arrow-right" size={19} />
               </span>
-            </a>
-            <a href="#/riwayat" className="button button-text">
+            </Link>
+            <Link to="riwayat" className="button button-text">
               <Icon name="history" size={18} />
               Lihat riwayat
-            </a>
+            </Link>
           </div>
           <p className="hero-footnote">
             <span className="tiny-check">
@@ -123,10 +124,10 @@ export function HomePage() {
               <div className="eyebrow">MASIH INGAT SIAPA RAJANYA?</div>
               <h2>Cerita terakhir.</h2>
             </div>
-            <a href="#/riwayat" className="text-link">
+            <Link to="riwayat" className="text-link">
               Lihat semua
               <Icon name="arrow-right" size={16} />
-            </a>
+            </Link>
           </div>
           <div className="session-grid">
             {recent.slice(0, 2).map((game) => (

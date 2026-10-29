@@ -1,4 +1,5 @@
 import type { AppState, Draft, Game, GameAction, Standing } from './types'
+import { isValidScore, sumScores } from './score'
 
 export const SCORE_STEPS = [5, 10, 25, 250, 500] as const
 export const MAX_PLAYERS = 24
@@ -35,7 +36,7 @@ export function createGame(names: string[], target: number): Game {
 export function standings(game: Game): Standing[] {
   const rows = game.players.map((player) => ({
     player,
-    total: game.rounds.reduce((total, round) => total + (round.scores[player.id] ?? 0), 0),
+    total: Number(sumScores(game.rounds.map((round) => round.scores[player.id] ?? 0))),
     rank: 1,
   }))
   return rows.map((row) => ({
@@ -60,11 +61,16 @@ export function draftScore(draft: Draft, playerId: string): number {
   return draft.histories[playerId]?.at(-1) ?? 0
 }
 
-export function projectedTotal(game: Game, draft: Draft, playerId: string): number {
+export function projectedTotal(
+  game: Game,
+  draft: Draft,
+  playerId: string,
+  score = draftScore(draft, playerId),
+): number {
   const total = standings(game).find((row) => row.player.id === playerId)?.total ?? 0
   const oldScore =
     game.rounds.find((round) => round.id === draft.editingRoundId)?.scores[playerId] ?? 0
-  return total - oldScore + draftScore(draft, playerId)
+  return Number(sumScores([total, -oldScore, score]))
 }
 
 function updateDraft(state: AppState, key: string, change: (draft: Draft) => Draft): AppState {
@@ -98,13 +104,27 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
       }
       return { ...state, drafts: { ...state.drafts, [key]: draft } }
     }
+    case 'set-score':
+      if (!isValidScore(action.score)) return state
+      return updateDraft(state, action.key, (draft) => {
+        const history = draft.histories[action.playerId]
+        const score = action.score === 0 ? 0 : action.score
+        if (!history || draftScore(draft, action.playerId) === score) return draft
+        const game = state.games.find((item) => item.id === draft.gameId)
+        const next = {
+          ...draft,
+          histories: { ...draft.histories, [action.playerId]: [...history, score] },
+        }
+        if (!game || !isValidScore(projectedTotal(game, next, action.playerId))) return draft
+        return next
+      })
     case 'tap':
       if (!SCORE_STEPS.some((step) => step === Math.abs(action.delta))) return state
       return updateDraft(state, action.key, (draft) => {
         const history = draft.histories[action.playerId]
         if (!history) return draft
         const value = draftScore(draft, action.playerId) + action.delta
-        if (!Number.isSafeInteger(value)) return draft
+        if (!isValidScore(value)) return draft
         return {
           ...draft,
           histories: { ...draft.histories, [action.playerId]: [...history, value] },
@@ -164,7 +184,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
         ? game.rounds.map((item) => (item.id === oldRound.id ? round : item))
         : [...game.rounds, round]
       const updated = { ...game, rounds, updatedAt: action.at }
-      if (standings(updated).some((row) => !Number.isSafeInteger(row.total))) return state
+      if (standings(updated).some((row) => !isValidScore(row.total))) return state
       const drafts = { ...state.drafts }
       delete drafts[action.key]
       return {

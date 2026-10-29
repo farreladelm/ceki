@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ConfirmDialog } from '../components/Dialog'
 import { Icon, Suit } from '../components/Icons'
 import { EmptyState, PageHeading } from '../components/Layout'
+import { Link } from '../components/Link'
 import { useGame } from '../game/GameProvider'
 import { isFinished } from '../game/engine'
 import type { Game, Round } from '../game/types'
@@ -62,10 +63,10 @@ export function RoundsPage({ game }: { game: Game }) {
                     <Icon name="trash" size={16} />
                     Hapus ronde
                   </button>
-                  <a href={`#/catat/${game.id}/${round.id}`} className="button button-secondary">
+                  <Link to={`catat/${game.id}/${round.id}`} className="button button-secondary">
                     <Icon name="edit" size={16} />
                     Koreksi skor
-                  </a>
+                  </Link>
                 </div>
               </div>
             </details>

@@ -43,6 +43,7 @@ export interface Standing {
 export type GameAction =
   | { type: 'create-game'; game: Game }
   | { type: 'begin-draft'; gameId: string; roundId?: string; id: string }
+  | { type: 'set-score'; key: string; playerId: string; score: number }
   | { type: 'tap'; key: string; playerId: string; delta: number }
   | { type: 'undo'; key: string; playerId: string }
   | { type: 'reset-player'; key: string; playerId: string }

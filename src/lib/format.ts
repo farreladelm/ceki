@@ -1,6 +1,6 @@
 const numberFormat = new Intl.NumberFormat('id-ID')
 
-export const points = (value: number) => numberFormat.format(value)
+export const points = (value: number | bigint) => numberFormat.format(value)
 export const signedPoints = (value: number) =>
   value > 0 ? `+${points(value)}` : points(value).replace('-', '−')
 

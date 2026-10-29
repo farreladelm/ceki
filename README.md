@@ -22,11 +22,11 @@ Buka **http://localhost:5177**. Port development dan preview dikunci ke **5177**
 
 1. Pilih 2, 3, 4, atau 5 pemain; jumlah manual mendukung **2–24 pemain**. Isi nama atau gunakan nama bawaan.
 2. Sepakati target **500**, **1.000**, atau angka bulat positif lainnya.
-3. Ketuk **±5, ±10, ±25, ±250, ±500** untuk membentuk skor bersih setiap pemain. Ketukan bisa diulang, diurungkan, atau di-reset per pemain.
+3. Ketuk **±5, ±10, ±25, ±250, ±500** untuk membentuk skor bersih setiap pemain, atau pilih **Input manual** dan ketik angka bulat. Tombol **+/−** pada input manual mengubah tanda skor. Klik **Terapkan skor** untuk mengganti nilai ronde, bukan menambahnya. Perubahan bisa diurungkan atau di-reset per pemain.
 4. Periksa ringkasan, lalu simpan seluruh ronde sekaligus. Skor nol dan negatif tetap valid.
 5. Saat target tercapai atau terlewati, skor tertinggi mendapat mahkota **Raja Meja**. Skor tertinggi yang sama menghasilkan juara bersama.
 
-Aplikasi tidak menilai kartu, memberikan bonus tutup, atau menambahkan penalti otomatis. Tombol **−500** bisa digunakan untuk mencatat joker mati.
+Aplikasi tidak menilai kartu, memberikan bonus tutup, atau menambahkan penalti otomatis. Tombol **−500** bisa digunakan untuk mencatat joker mati. Input manual menerima skor positif, negatif, dan nol; tidak harus kelipatan 5. Angka desimal, pemisah ribuan, dan nilai di luar batas bilangan bulat aman ditolak. Input baru masuk ke draf setelah diterapkan; menekan Batal tidak mengubah skor.
 
 ### Koreksi dan riwayat
 
@@ -60,7 +60,7 @@ Jika penyimpanan diblokir atau penuh, aplikasi menampilkan peringatan dan memper
 
 Tes end-to-end memakai **Google Chrome lokal** melalui Playwright. Pastikan Chrome terpasang. Setiap tes memakai penyimpanan browser terisolasi, bukan data permainan pribadi. Screenshot dan trace pengujian disimpan di `test-results/`.
 
-Pengujian mencakup skor bertanda positif/negatif, ketukan berulang, undo/reset, pemulihan draf setelah reload, target, juara bersama, koreksi hasil akhir, nama ganda, penghapusan, dan kegagalan penyimpanan.
+Pengujian mencakup skor bertanda positif/negatif, input skor manual, ketukan berulang, undo/reset, pemulihan draf setelah reload, target, juara bersama, koreksi hasil akhir, nama ganda, penghapusan, dan kegagalan penyimpanan. Input manual diuji untuk pembatalan, tanda minus di keyboard HP, validasi angka, penggantian skor, serta penyimpanan angka yang bukan kelipatan 5. Tes navigasi memeriksa URL tanpa hash, Back/Forward, refresh halaman bertingkat, tab baru, dan migrasi tautan lama. Lebar formulir diuji dari 320 hingga 1.365 px, termasuk breakpoint dua kolom dan input manual.
 
 ## Struktur
 
@@ -68,7 +68,7 @@ Pengujian mencakup skor bertanda positif/negatif, ketukan berulang, undo/reset, 
 src/
   components/    Kartu, ikon SVG, dialog, dan elemen bersama
   game/          Model, reducer, perhitungan, penyimpanan, dan unit test
-  lib/           Format angka/tanggal dan navigasi berbasis hash
+  lib/           Format angka/tanggal dan navigasi browser History API
   pages/         Beranda, pengaturan, meja, input, riwayat, dan hasil akhir
   styles.css     Tema kartu dan layout mobile-first
 e2e/             Skenario browser Playwright
@@ -77,4 +77,23 @@ public/          Ikon dan robots.txt
 
 Stack: **React, TypeScript, Vite, Tailwind CSS, dan CSS custom**. State permainan menggunakan reducer dan Context; logika skor terpisah dari antarmuka. Animasi menghormati preferensi _reduced motion_.
 
-Untuk publikasi, unggah isi `dist/` ke hosting statis. Navigasi memakai hash sehingga tidak memerlukan aturan rewrite server. Gunakan alamat situs yang konsisten agar catatan lokal tetap dapat ditemukan.
+## Publikasi dan URL
+
+Unggah isi `dist/` ke hosting statis pada root domain. Navigasi memakai URL bersih seperti `/atur`, `/meja/:id`, dan `/riwayat`, tanpa `/#/`. Tautan versi lama seperti `/#/atur` otomatis diganti ke `/atur` tanpa menghapus permainan atau draf.
+
+> [!IMPORTANT]
+> Hosting production harus menyediakan **SPA fallback**: permintaan halaman yang bukan file statis diarahkan ke `/index.html`. Ini diperlukan agar membuka tautan langsung atau refresh di `/meja/:id` tidak menghasilkan 404. Vite development dan preview sudah menyediakan fallback tersebut.
+
+Hosting menggunakan **NGINX**. Arahkan `root` ke direktori hasil build `dist/` dan gunakan fallback yang sudah dikonfigurasi. Contoh di dalam blok `server`:
+
+```nginx
+location /assets/ {
+    try_files $uri =404;
+}
+
+location / {
+    try_files $uri $uri/ /index.html;
+}
+```
+
+File JavaScript, CSS, font, dan aset yang ada tetap dilayani sebagai file biasa, bukan diganti HTML. Gunakan alamat situs yang konsisten agar catatan lokal tetap dapat ditemukan.

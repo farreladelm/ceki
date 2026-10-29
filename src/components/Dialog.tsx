@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { Icon } from './Icons'
 
 export function Dialog({
@@ -7,11 +7,13 @@ export function Dialog({
   children,
   onClose,
   className = '',
+  initialFocusRef,
 }: {
   title: string
   children: ReactNode
   onClose: () => void
   className?: string
+  initialFocusRef?: RefObject<HTMLElement | null>
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -23,11 +25,12 @@ export function Dialog({
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     dialog?.showModal()
+    initialFocusRef?.current?.focus()
     return () => {
       dialog?.close()
       document.body.style.overflow = previousOverflow
     }
-  }, [])
+  }, [initialFocusRef])
 
   return (
     <dialog

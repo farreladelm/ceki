@@ -7,6 +7,9 @@ import './styles.css'
 import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { GameProvider } from './game/GameProvider'
+import { migrateLegacyRoute } from './lib/router'
+
+migrateLegacyRoute()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

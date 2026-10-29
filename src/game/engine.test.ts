@@ -137,6 +137,116 @@ describe('tap scoring', () => {
   })
 })
 
+describe('manual scoring', () => {
+  function setScore(state: AppState, score: number, playerId = 'p1', draft = key) {
+    return gameReducer(state, { type: 'set-score', key: draft, playerId, score })
+  }
+
+  it('replaces the round score instead of adding to it', () => {
+    const state = setScore(taps(start(), [10, 10]), 123)
+    expect(draftScore(state.drafts[key]!, 'p1')).toBe(123)
+    expect(state.games[0]?.rounds).toHaveLength(0)
+  })
+
+  it.each([37, -47, 0])('accepts the signed integer %s', (score) => {
+    const state = setScore(taps(start(), [25]), score)
+    expect(draftScore(state.drafts[key]!, 'p1')).toBe(score)
+  })
+
+  it('mixes manual input and taps, and undoes each as a single action', () => {
+    let state = taps(setScore(taps(start(), [10, 10]), 123), [-5])
+    expect(draftScore(state.drafts[key]!, 'p1')).toBe(118)
+    state = gameReducer(state, { type: 'undo', key, playerId: 'p1' })
+    expect(draftScore(state.drafts[key]!, 'p1')).toBe(123)
+    state = gameReducer(state, { type: 'undo', key, playerId: 'p1' })
+    expect(draftScore(state.drafts[key]!, 'p1')).toBe(20)
+  })
+
+  it('resets and restores a manually entered value without changing other players', () => {
+    let state = setScore(taps(start(), [-500], 'p2'), -47)
+    state = gameReducer(state, { type: 'reset-player', key, playerId: 'p1' })
+    expect(draftScore(state.drafts[key]!, 'p1')).toBe(0)
+    state = gameReducer(state, { type: 'undo', key, playerId: 'p1' })
+    expect(draftScore(state.drafts[key]!, 'p1')).toBe(-47)
+    expect(draftScore(state.drafts[key]!, 'p2')).toBe(-500)
+  })
+
+  it('does not add an undo step when the same value is applied', () => {
+    const state = taps(start(), [25])
+    expect(setScore(state, 25)).toBe(state)
+  })
+
+  it.each([12.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1])(
+    'ignores an invalid manual value %s',
+    (score) => {
+      const state = start()
+      expect(setScore(state, score)).toBe(state)
+    },
+  )
+
+  it('ignores unknown drafts and players', () => {
+    expect(setScore(emptyState(), 37)).toEqual(emptyState())
+    const state = start()
+    expect(setScore(state, 37, 'missing')).toBe(state)
+  })
+
+  it('rejects a manual value that would make the accumulated total unsafe', () => {
+    const positive = start(
+      fixtureGame([[Number.MAX_SAFE_INTEGER - 10, 0]], Number.MAX_SAFE_INTEGER),
+    )
+    expect(setScore(positive, 20)).toBe(positive)
+    const negative = start(
+      fixtureGame([[Number.MIN_SAFE_INTEGER + 10, 0]], Number.MAX_SAFE_INTEGER),
+    )
+    expect(setScore(negative, -20)).toBe(negative)
+  })
+
+  it('does not check the target until the whole round is committed', () => {
+    const state = setScore(start(), 501)
+    expect(isFinished(state.games[0]!)).toBe(false)
+    expect(winners(commit(state).games[0]!)[0]?.total).toBe(501)
+  })
+
+  it('corrects a round without changing other rounds or double-counting the old score', () => {
+    const editKey = draftKey('game-1', 'r1')
+    const state = setScore(
+      start(
+        fixtureGame([
+          [100, 50],
+          [200, 100],
+        ]),
+        'r1',
+      ),
+      37,
+      'p1',
+      editKey,
+    )
+    expect(projectedTotal(state.games[0]!, state.drafts[editKey]!, 'p1')).toBe(237)
+    const saved = commit(state, editKey)
+    expect(saved.games[0]?.rounds).toHaveLength(2)
+    expect(saved.games[0]?.rounds[0]?.scores.p1).toBe(37)
+    expect(saved.games[0]?.rounds[1]?.scores.p1).toBe(200)
+  })
+
+  it('does not award an extra point or crown when large manual corrections cancel', () => {
+    const maximum = Number.MAX_SAFE_INTEGER
+    const editKey = draftKey('game-1', 'r2')
+    const game = fixtureGame(
+      [
+        [maximum - 1, 0],
+        [-(maximum - 6), 0],
+        [-5, 0],
+      ],
+      maximum,
+    )
+    const state = setScore(start(game, 'r2'), 5, 'p1', editKey)
+    expect(projectedTotal(state.games[0]!, state.drafts[editKey]!, 'p1')).toBe(maximum - 1)
+    const saved = commit(state, editKey)
+    expect(standings(saved.games[0]!)[0]?.total).toBe(maximum - 1)
+    expect(isFinished(saved.games[0]!)).toBe(false)
+  })
+})
+
 describe('target and ranking', () => {
   it('does not end a game before the full round is saved', () => {
     const state = taps(start(), [500])
